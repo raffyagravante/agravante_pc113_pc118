@@ -4,32 +4,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Auth\User as Authenticatable; 
-use Illuminate\Notifications\Notifiable;
 
-class Employee extends Model
+class Student extends Model
 {
-    use HasFactory, Notifiable; 
+    use HasFactory;
 
-    protected $table = 'employees';
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'students';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'first_name',
         'last_name',
+        'age',
+        'gender',
+        'address',
         'email',
-        'password',
+        'course',
+        'contact_number',
     ];
-
-    protected $hidden = [
-        'password',
-    ];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($employee) {
-            $employee->password = bcrypt($employee->password);
-        });
-    }
 }
