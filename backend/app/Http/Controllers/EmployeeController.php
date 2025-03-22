@@ -2,106 +2,111 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use Illuminate\Http\Request;
-use App\Models\EmployeeModel;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+
 class EmployeeController extends Controller
 {
-    // Constructor to add authentication middleware
-    public function __construct()
+    /**
+     * Display a listing of the resource.
+     */
+    public function employeeD()
     {
-        $this->middleware('auth:api');  // Ensure user is authenticated
+        return view('employee.dashboard');
     }
 
-    // Get a list of employees with optional search
-    public function index(Request $request)
+    public function index()
     {
-        $query = EmployeeModel::query();
-
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhere('age', 'like', "%{$search}%")
-                ->orWhere('gender', 'like', "%{$search}%")
-                ->orWhere('address', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('position', 'like', "%{$search}%")
-                ->orWhere('contact_number', 'like', "%{$search}%");
-        }
-
-        $employees = $query->paginate(10);  // Paginate the results
-        return response()->json($employees, 200);
+        return response()->json(Employee::all());
     }
 
-    // Store a new employee
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'age' => 'required|integer',
-            'gender' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees',
-            'position' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:255',
+        $request->validate([
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'email' => 'required|email|unique:employees,email',
+            'password' => 'required|string',
+            'position' => 'required|string',
         ]);
 
-        $employee = EmployeeModel::create($validatedData);
+        $data = $request->all();
+        $data['password'] = Hash::make($request->password);
 
-        return response()->json([
-            'message' => 'Employee created successfully',
-            'employee' => $employee,
-        ], 201);
+        $employee = Employee::create($data);
+        return response()->json($employee, 201);
     }
 
-    // Show a single employee by ID
-    public function show(EmployeeModel $employee)
+    /**
+     * Display the specified resource.
+     */
+    public function search(Request $request)
     {
-        if (!$employee) {
-            return response()->json(['message' => 'Employee not found'], 404);
+        $search = $request->query('search');
+
+        if ($search) {
+            $employees = Employee::where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->get();
+
+            if ($employees->isNotEmpty()) {
+                return response()->json($employees);
+            } else {
+                return response()->json(['message' => 'Employee not found'], 404);
+            }
         }
-        return response()->json($employee);
+
+        $employees = Employee::all();
+        return response()->json($employees);
     }
 
-    // Update an existing employee
-    public function update(Request $request, $id)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Employee $employee)
     {
-        $employee = EmployeeModel::find($id);
+        $employee = Employee::find($employee->id);
         if (is_null($employee)) {
             return response()->json(['message' => 'Employee not found'], 404);
         }
 
-        $validatedData = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'age' => 'required|integer',
-            'gender' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email,' . $employee->id,
-            'position' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:255',
+        $request->validate([
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'email' => 'required|email|unique:employees,email',
+            'password' => 'required|string',
+            'position' => 'required|string',
         ]);
 
-        $employee->update($validatedData);
+        $data = $request->all();
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
 
+        $employee->update($data);
         return response()->json([
             'message' => 'Employee updated successfully',
             'employee' => $employee,
         ]);
     }
 
-    // Delete an employee
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy($id)
     {
-        $employee = EmployeeModel::find($id);
+        $employee = Employee::find($id);
         if (is_null($employee)) {
             return response()->json(['message' => 'Employee not found'], 404);
         }
-
         $employee->delete();
-
-        return response()->json(['message' => 'Employee deleted successfully']);
+        return response()->json([
+            'message' => 'Employee deleted successfully'
+        ]);
     }
 }

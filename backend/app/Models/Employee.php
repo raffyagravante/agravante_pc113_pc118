@@ -6,15 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
 
-class student extends Model
+class Employee extends Model
 {
     use HasFactory, HasApiTokens;
+
     protected $fillable =
     [
-        'firstname',
-        'lastname',
+        'first_name',
+        'last_name',
         'email',
         'password',
-        'course'
+        'position'
     ];
 }

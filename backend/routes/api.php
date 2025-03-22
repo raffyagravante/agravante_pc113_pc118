@@ -5,7 +5,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployeeController;
-Route::middleware('api')->group(function () {
+
+
+
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+
+
 
     Route::get('/students', [StudentController::class, 'index']);  
     Route::post('/students', [StudentController::class, 'store']); 
@@ -18,11 +26,10 @@ Route::middleware('api')->group(function () {
     Route::put('/employees/{employee}', [EmployeeController::class, 'update']);
 
 
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+  
     
     Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
      Route::post('/logout', [AuthController::class, 'logout']);
     });
-}); 
+; 

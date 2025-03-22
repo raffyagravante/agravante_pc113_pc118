@@ -2,30 +2,35 @@
 
 namespace Database\Factories;
 
-use App\Models\EmployeeModel;
+use App\Models\Employee;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Employee>
+ */
 class EmployeeFactory extends Factory
 {
-    // The name of the corresponding model
-    protected $model = EmployeeModel::class;
+    /**
+     * The name of the corresponding model.
+     *
+     * @var string
+     */
+    protected $model = Employee::class;
 
     /**
      * Define the model's default state.
      *
      * @return array
      */
-    public function definition()
+    public function definition(): array
     {
         return [
-            'first_name' => $this->faker->firstName,
-            'last_name' => $this->faker->lastName,
-            'age' => $this->faker->numberBetween(18, 65),
-            'gender' => $this->faker->randomElement(['Male', 'Female']),
-            'address' => $this->faker->address,
-            'email' => $this->faker->unique()->safeEmail,
-            'position' => $this->faker->jobTitle,
-            'contact_number' => $this->faker->phoneNumber,
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'password' => Hash::make('password123'), // Default hashed password
+            'position' => $this->faker->jobTitle(),
         ];
     }
 }

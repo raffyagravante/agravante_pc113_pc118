@@ -2,90 +2,110 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Student;
 use Illuminate\Http\Request;
-use App\Models\Student; 
 
 class StudentController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Display a listing of the resource.
+     */
+    public function studentD()
     {
-        $query = Student::query(); 
-
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhere('age', 'like', "%{$search}%")
-                ->orWhere('gender', 'like', "%{$search}%")
-                ->orWhere('address', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('course', 'like', "%{$search}%")
-                ->orWhere('contact_number', 'like', "%{$search}%");
-        }
-
-        $students = $query->get(); 
-        return response()->json($students, 200);
+        return view('student.dashboard');
     }
 
-    public function store(Request $request) 
+    public function index()
     {
-        $validatedData = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'age' => 'required|integer',
-            'gender' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'email' => 'required|email|unique:students',
-            'course' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:255',
+        return response()->json(Student::all());
+    }
+
+   
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'email' => 'required|email|unique:student,email',
+            'password' => 'required|string',
+            'course' => 'required|string',
         ]);
 
-        $student = Student::create($validatedData); 
-
-        return response()->json([
-            'message' => 'Student created successfully',
-            'student' => $student,
-        ], 201);
+        $student = Student::create($request->all());
+        return response()->json($student, 201);
     }
 
-    public function show(Student $student) 
+    /**
+     * Display the specified resource.
+     */
+    public function search(Request $request)
     {
-        return response()->json($student);
+        $search = $request->query('search');
+    
+        if ($search) {
+            $students = Student::where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->get();
+    
+            if ($students->isNotEmpty()) {
+                return response()->json($students);
+            } else {
+                return response()->json(['message' => 'Student not found'], 404);
+            }
+        }
+    
+        $students = Student::all();
+        return response()->json($students);
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Student $student)
     {
-        $student = Student::find($id); 
-        if (is_null($student)) {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Student $student)
+    {
+        $student = Student::find($student->id);
+        if(is_null($student)){
             return response()->json(['message' => 'Student not found'], 404);
         }
 
-        $validatedData = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'age' => 'required|integer',
-            'gender' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'email' => 'required|email|unique:students,email,' . $student->id,
-            'course' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:255',
+        $request->validate([
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'email' => 'required|email|unique:student,email',
+            'password' => 'required|string',
+            'course' => 'required|string',
         ]);
 
-        $student->update($validatedData);
+        $student->update($request->all());
         return response()->json([
             'message' => 'Student updated successfully',
             'student' => $student,
         ]);
+        
     }
 
-    public function destroy($id)
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Student $student, $id)
     {
-        $student = Student::find($id); 
-        if (is_null($student)) {
+        $student = Student::find($id);
+        if(is_null($student)){
             return response()->json(['message' => 'Student not found'], 404);
         }
-
         $student->delete();
-        return response()->json(['message' => 'Student deleted successfully']);
+        return response()->json([
+            'message' => 'student deleted successfully'
+        ]);
     }
 }

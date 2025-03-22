@@ -83,58 +83,28 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        try {
-            $validateUser = Validator::make(
-                $request->all(),
-                [
-                    'email' => 'required|email',
-                    'password' => 'required'
-                ]
-            );
-    
-            if ($validateUser->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Validation error',
-                    'errors' => $validateUser->errors()
-                ], 401);
-            }
+        // Validate request input
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string|min:6'
+        ]);
 
-            if (!Auth::attempt($request->only(['email', 'password']))) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Invalid credentials!',
-                ], 401);
-            }
-    
-            $user = User::where('email', $request->email)->first();
-    
-            Log::info('User retrieved:', ['email' => $request->email, 'user_id' => $user->id]);
-    
-            if (empty($user)) {
-                return response()->json([
-                    'message' => 'User not found',
-                ], 404);
-            }
-    
-            $token = $user->createToken('auth_token')->plainTextToken;
-    
-            return response()->json([
-                'status' => true,
-                'message' => 'Login successful',
-                'user' => $user,
-                'token' => $token,
-            ]);
-    
-        } catch (\Throwable $th) {
-            Log::error('Exception occurred during login:', ['message' => $th->getMessage()]);
-    
-            return response()->json([
-                'status' => false,
-                'message' => 'An error occurred during login',
-                'error' => $th->getMessage()
-            ], 500);
+        // Find user by email
+        $user = User::where('email', $credentials['email'])->first();
+
+        // Check if user exists and password is correct
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
+
+        // Generate API Token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login successful',
+            'token' => $token,
+            'user' => $user
+        ]);
     }
     
 
