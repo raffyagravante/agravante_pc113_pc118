@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\JsonResponse;
 
 class EmployeeController extends Controller
 {
@@ -16,7 +18,7 @@ class EmployeeController extends Controller
         return view('employee.dashboard');
     }
 
-    public function index()
+    public function list()
     {
         return response()->json(Employee::all());
     }
@@ -24,21 +26,30 @@ class EmployeeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'email' => 'required|email|unique:employees,email',
-            'password' => 'required|string',
-            'position' => 'required|string',
+        try {
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:students,email',
+            'position' => 'required|string|max:255',
         ]);
 
-        $data = $request->all();
-        $data['password'] = Hash::make($request->password);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $employee = Employee::create($data);
-        return response()->json($employee, 201);
+        
+        $employee = Employee::create($request->all());
+
+        return response()->json(['message' => 'Employee created successfully', 'employee' => $employee], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -68,45 +79,54 @@ class EmployeeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Employee $employee)
+    public function update(Request $request, $id): JsonResponse
     {
-        $employee = Employee::find($employee->id);
-        if (is_null($employee)) {
-            return response()->json(['message' => 'Employee not found'], 404);
+        $employee = Employee::find($id); // Correct variable name and case
+        try {
+            if (!$employee) {
+                return response()->json(['message' => 'Employee not found'], 404); // Corrected message
+            }
+    
+            $validator = Validator::make($request->all(), [
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|unique:employees,email,' . $employee->id, // Correct table name
+                'position' => 'required|string|max:255',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+    
+            $employee->update($request->all());
+    
+            return response()->json([
+                'message' => 'Employee updated successfully',
+                'employee' => $employee,
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
         }
-
-        $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'email' => 'required|email|unique:employees,email',
-            'password' => 'required|string',
-            'position' => 'required|string',
-        ]);
-
-        $data = $request->all();
-        if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        }
-
-        $employee->update($data);
-        return response()->json([
-            'message' => 'Employee updated successfully',
-            'employee' => $employee,
-        ]);
     }
-
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Employee $employee): JsonResponse
     {
-        $employee = Employee::find($id);
-        if (is_null($employee)) {
-            return response()->json(['message' => 'Employee not found'], 404);
+        try {
+            $employee->delete();
+
+            return response()->json([
+                'message' => 'Employee deleted successfully'
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
         }
-        $employee->delete();
-        return response()->json([
-            'message' => 'Employee deleted successfully'
-        ]);
     }
 }

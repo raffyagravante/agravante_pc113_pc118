@@ -24,13 +24,16 @@ class StudentFactory extends Factory
      * @return array
      */
     public function definition(): array
-    {
-        return [
-            'firstname' => $this->faker->firstName(),
-            'lastname' => $this->faker->lastName(),
-            'email' => $this->faker->unique()->safeEmail(),
-            'password' => Hash::make('password123'), // Default hashed password
-            'course' => $this->faker->randomElement(['BSIT', 'BSCS', 'BSBA', 'BSED', 'BSN']), // Sample courses
-        ];
-    }
+{
+    return [
+        'first_name' => $this->faker->firstName(),
+        'last_name' => $this->faker->lastName(),
+        'email' => $this->faker->unique()->safeEmail(),
+        'age' => $this->faker->numberBetween(18, 25), // Generates a random age between 18 and 25
+        'gender' => $this->faker->randomElement(['male', 'female', 'other']), // Random gender
+        'address' => $this->faker->address(), // Generates a random address
+        'contact_number' => $this->faker->phoneNumber(), // Generates a random phone number
+        'course' => $this->faker->randomElement(['BSIT', 'BSCS', 'BSBA', 'BSED', 'BSN']), // Sample courses
+    ];
+}
 }

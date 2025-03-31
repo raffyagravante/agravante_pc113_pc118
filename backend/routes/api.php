@@ -7,29 +7,32 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployeeController;
 
 
-
-
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-
+// Route::middleware(['auth:sanctum', 'allow.roles:1,2,3'])->group(function () {
+    Route::get('/admin-dashboard', [StudentController::class, 'index']);
 
 
 
-    Route::get('/students', [StudentController::class, 'index']);  
-    Route::post('/students', [StudentController::class, 'store']); 
-    Route::get('/students/{student}', [StudentController::class, 'show']); 
-    Route::put('/students/{student}', [StudentController::class, 'update']); 
-    Route::delete('/students/{student}', [StudentController::class, 'destroy']); 
-    Route::get('/employees', [EmployeeController::class, 'index']);
-    Route::post('/employees', [EmployeeController::class, 'store']);
-    Route::get('/employees/{employee}', [EmployeeController::class, 'show']);
-    Route::put('/employees/{employee}', [EmployeeController::class, 'update']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
 
 
-  
-    
+    Route::get('/studentsList', [StudentController::class, 'list']);  
+    Route::post('/createstudents', [StudentController::class, 'store']); 
+    Route::get('/students/search', [StudentController::class, 'search']);
+    Route::put('/students/{id}', [StudentController::class, 'update']); 
+    Route::delete('/delete/students/{id}', [StudentController::class, 'destroy']);
+
+
+    Route::get('/employeesList', [EmployeeController::class, 'list']);
+    Route::post('/createemployees', [EmployeeController::class, 'store']);
+    Route::get('/employees/search', [EmployeeController::class, 'search']);
+    Route::put('/employees/{id}', [EmployeeController::class, 'update']);
+    Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']); 
+
+
     Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
      Route::post('/logout', [AuthController::class, 'logout']);
     });
-; 
+
+// });

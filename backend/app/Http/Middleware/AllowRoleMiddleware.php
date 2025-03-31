@@ -15,15 +15,20 @@ class AllowRolesMiddleware
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-     
         $user = $request->user(); 
-        if ($user->role == 1) {
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized access'], 401);
+        }   
+        if ($user->role === 1) {
             return $next($request);
         }
-        if (!in_array($user->role, $roles)) {
+        if (!empty($roles) && !in_array($user->role, $roles, true)) {
             return response()->json([
-                'message' => 'Dili ka kasud diha! bawal!!!!!!'], 403);
+                'message' => 'Access denied! You do not have permission.'
+            ], 403);
         }
+    
         return $next($request);
     }
+    
 }
