@@ -83,51 +83,66 @@ class StudentController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id): JsonResponse
-{
-    $student = Student::find($id); // Correct model and variable name
+    {
+        $student = Student::find($id); // Correct model and variable name
 
-    if (!$student) {
-        return response()->json(['message' => 'Student not found'], 404); // Corrected message
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404); // Corrected message
+        }
+
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'string|max:255',
+            'last_name' => 'string|max:255',
+            'age' => 'integer',
+            'gender' => 'string',
+            'email' => 'email|unique:students,email,' . $student->id, // Correct table name
+            'course' => 'string|max:255', // Adjusted field to match Student model
+            'contact_number' => 'string|max:15', // Adjusted field to match Student model
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $student->update($request->all());
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Student updated successfully',
+            'student' => $student,
+        ], 200);
     }
-
-    $validator = Validator::make($request->all(), [
-        'first_name' => 'string|max:255',
-        'last_name' => 'string|max:255',
-        'age' => 'integer',
-        'gender' => 'string',
-        'email' => 'email|unique:students,email,' . $student->id, // Correct table name
-        'course' => 'string|max:255', // Adjusted field to match Student model
-        'contact_number' => 'string|max:15', // Adjusted field to match Student model
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
-
-    $student->update($request->all());
-
-    return response()->json([
-        'message' => 'Student updated successfully',
-        'student' => $student,
-    ], 200);
-}
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Student $student): JsonResponse
+    public function destroy($id)
     {
         try {
+            $student = Student::findOrFail($id);
             $student->delete();
-
+            
             return response()->json([
-                'message' => 'Student deleted successfully'
+                'status' => true,
+                'message' => 'Student Deleted Successfully!',
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
                 'message' => $th->getMessage()
             ], 500);
-        }
+        }   
     }
+
+    public function edit($id)
+    {
+        $student = Student::find($id);
+    
+        if (!$student) {
+            return response()->json(['status' => false, 'message' => 'Student not found'], 404);
+        }
+    
+        return response()->json($student, 200);
+    }
+    
 
 }
