@@ -28,7 +28,7 @@ class StudentController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'age' => 'required|integer|min:1',
-            'gender' => 'required|in:male,female,other',
+            'gender' => 'required|in:Male,Female,other',
             'address' => 'required|string|max:255',
             'email' => 'required|email|unique:students,email',
             'course' => 'required|string|max:255',
@@ -42,7 +42,11 @@ class StudentController extends Controller
         
         $student = Student::create($request->all());
 
-        return response()->json(['message' => 'Student created successfully', 'student' => $student], 201);
+        return response()->json([
+            'status' => true, 
+            'message' => 'Student created successfully', 
+            'student' => $student
+         ],201);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,

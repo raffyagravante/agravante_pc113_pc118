@@ -29,7 +29,7 @@ i:hover{
     color: #313934;
 }
 
-.wrapper {
+.wrapper {  
     display: flex;
 }
 
@@ -40,7 +40,7 @@ i:hover{
     width: 100%;
     overflow: hidden;
     transition: all 0.35s ease-in-out;
-    background-color: #fff;
+    background-color: #753131;
     min-width: 0;
 }
 
@@ -50,7 +50,7 @@ i:hover{
     min-width: 70px;
     z-index: 1000;
     transition: all .25s ease-in-out;
-    background: linear-gradient(to right, black, red, black);
+    background: linear-gradient(to right, black, rgb(0, 255, 102), black);
     display: flex;
     flex-direction: column;
 }
@@ -123,7 +123,7 @@ a.sidebar-link {
 
 a.sidebar-link:hover {
     background-color: rgba(255, 255, 255, .075);
-    border-left: 3px solid #3b7ddd;
+    border-left: 3px solid #3bdd97;
 }
 
 .footer a{

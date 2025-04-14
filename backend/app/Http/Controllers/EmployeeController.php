@@ -129,4 +129,16 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+    public function edit($id)
+    {
+        $Employee = Employee::find($id);
+    
+        if (!$Employee) {
+            return response()->json(['status' => false, 'message' => 'Employee not found'], 404);
+        }
+    
+        return response()->json($Employee, 200);
+    }
+    
+
 }

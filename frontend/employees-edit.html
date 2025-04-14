@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Employee</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4 text-center">Edit Employees</h2>
+        <div id="alertMessage" class="alert d-none"></div>
+        
+        <form id="editEmployeeForm">
+            <input type="hidden" id="employee_id">
+
+            <div class="form-group">
+                <label for="first_name">First Name</label>
+                <input type="text" class="form-control" id="first_name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" class="form-control" id="last_name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">email</label>
+                <input type="text" class="form-control" id="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="position">Position</label>
+                <input type="text" class="form-control" id="position" required>
+            </div>
+
+
+            <button type="submit" class="btn btn-primary">Update Employee</button>
+            <a href="employees.html" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+    <script>
+        // Function to get URL query parameters
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        const studentId = getQueryParam('id');
+
+        if (!employeeId) {
+            alert("No employee ID found.");
+            window.location.href = 'employees.html'; // Redirect if no ID is found
+        }
+
+        // Fetch student data and populate the form
+        fetch(`http://127.0.0.1:8000/api/get/employees/{Id}`, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                Authorization: 'Bearer ' + localStorage.getItem('token')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data || data.status === false) {
+                alert("Employee not found.");
+                window.location.href = 'employees.html';
+                return;
+            }
+
+            document.getElementById('employee_id').value = employeeId;
+            document.getElementById('first_name').value = data.first_name;
+            document.getElementById('last_name').value = data.last_name;
+            document.getElementById('email').value = data.email;
+            document.getElementById('position').value = data.position;
+        })
+        .catch(error => console.error('Error fetching :', error));
+
+        // Handle form submission to update student
+        document.getElementById('editEmployeeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const updatedData = {
+                first_name: document.getElementById('first_name').value,
+                last_name: document.getElementById('last_name').value,
+                email: document.getElementById('email').value,
+                position: document.getElementById('position').value,
+            };
+
+            fetch(`http://127.0.0.1:8000/api/update/employees/${employeeId}`, {
+                method: 'PUT',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify(updatedData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const alertMessage = document.getElementById('alertMessage');
+                if (data.message === "Employee updated successfully") {
+                    alertMessage.className = 'alert alert-success';
+                    alertMessage.innerText = "Employee updated successfully!";
+                    alertMessage.classList.remove('d-none');
+
+                    setTimeout(() => {
+                        window.location.href = 'employees.html'; // Redirect after update
+                    }, 2000);
+                } else {
+                    alertMessage.className = 'alert alert-danger';
+                    alertMessage.innerText = data.message;
+                    alertMessage.classList.remove('d-none');
+                }
+            })
+            .catch(error => console.error('Error updating employee:', error));
+        });
+    </script>
+</body>
+</html>

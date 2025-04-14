@@ -28,6 +28,7 @@ use App\Http\Controllers\EmployeeController;
     Route::get('/employees/search', [EmployeeController::class, 'search']);
     Route::put('/employees/{id}', [EmployeeController::class, 'update']);
     Route::delete('/delete/employees/{id}', [EmployeeController::class, 'destroy']);
+    Route::get('/get/employees/{id}', [EmployeeController::class, 'edit']);
 
 
     Route::middleware('auth:sanctum')->group(function () {
