@@ -32,7 +32,7 @@ class EmployeeController extends Controller
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:students,email',
+            'email' => 'required|email|unique:employees,email',
             'position' => 'required|string|max:255',
         ]);
 
@@ -43,7 +43,11 @@ class EmployeeController extends Controller
         
         $employee = Employee::create($request->all());
 
-        return response()->json(['message' => 'Employee created successfully', 'employee' => $employee], 201);
+        return response()->json([
+            'status' => true, 
+            'message' => 'Employee created successfully', 
+            'employee' => $employee
+        ], 201);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
@@ -52,6 +56,8 @@ class EmployeeController extends Controller
         }
     }
 
+   
+    
     /**
      * Display the specified resource.
      */
@@ -114,12 +120,14 @@ class EmployeeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Employee $employee): JsonResponse
+    public function destroy($id)
     {
         try {
+            $employee = Employee::findOrFail($id);
             $employee->delete();
 
             return response()->json([
+                'status' => true,
                 'message' => 'Employee deleted successfully'
             ], 200);
         } catch (\Throwable $th) {
@@ -129,6 +137,8 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+
+
     public function edit($id)
     {
         $Employee = Employee::find($id);
@@ -139,6 +149,7 @@ class EmployeeController extends Controller
     
         return response()->json($Employee, 200);
     }
+    
     
 
 }
