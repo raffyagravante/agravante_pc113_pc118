@@ -9,10 +9,153 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-   
+    
+    public function list()
+    {
+        try {
+            $users = User::all();
+            return response()->json($users);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $validateUser = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+                'password' => 'required|string|min:6',
+            ]);
+    
+            if ($validateUser->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Create Failed!',
+                    'errors' => $validateUser->errors()
+                ], 422);
+            }
+    
+            // Handle profile image upload
+            $filename = null;
+            if ($request->hasFile('profile_image')) {
+                $image = $request->file('profile_image');
+                $filename = time() . '_' . $image->getClientOriginalName();
+                $image->move(public_path('images'), $filename);
+            }
+            $imageUrl = $filename ? url('images/' . $filename) : null;
+    
+            // Create user
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'profile_image' => $filename,
+                'password' => Hash::make($request->password),
+            ]);
+    
+            // Disable cache for the response
+            return response()->json([
+                'status' => true,
+                'message' => 'User Created Successfully',
+                'image_url' => $imageUrl,
+                'user' => $user,
+            ], 201)->header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Server Error: ' . $th->getMessage()
+            ], 500);
+        }
+    }
+    
+
+
+    public function updateUser(Request $request, $id)
+    {
+        try {
+            $user = User::findOrFail($id);
+    
+            $validateUser = Validator::make($request->all(), [
+                'name' => 'nullable|string|max:255',
+                'email' => 'nullable|email|unique:users,email,' . $user->id,
+                'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:10048',
+                'password' => 'nullable|string|min:6',
+            ]);
+    
+            if ($validateUser->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Update Failed!',
+                    'errors' => $validateUser->errors()
+                ], 422);
+            }
+    
+            $updateData = [];
+    
+            if ($request->filled('name')) {
+                $updateData['name'] = $request->name;
+            }
+    
+            if ($request->filled('email')) {
+                $updateData['email'] = $request->email;
+            }
+    
+            if ($request->filled('password')) {
+                $updateData['password'] = Hash::make($request->password);
+            }
+    
+            // Handle profile image upload
+            if ($request->hasFile('profile_image')) {
+                $image = $request->file('profile_image');
+                $filename = time() . '_' . $image->getClientOriginalName();
+                $image->move(public_path('images'), $filename);
+    
+                // Delete old image if exists
+                if ($user->profile_image && file_exists(public_path('images/' . $user->profile_image))) {
+                    unlink(public_path('images/' . $user->profile_image));
+                }
+    
+                $updateData['profile_image'] = $filename;
+            }
+    
+            // Apply updates
+            $user->update($updateData);
+    
+            return response()->json([
+                'status' => true,
+                'message' => 'User Updated Successfully',
+                'user' => $user
+            ], 200);
+    
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+    
+
+
+    public function edit($id)
+    {
+        $user = User::find($id);
+    
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => 'User not found'], 404);
+        }
+    
+        return response()->json($user, 200);
+    }
+
+
+
     public function register(Request $request)
     {
         $validatedData = $request->validate([
@@ -35,42 +178,24 @@ class AuthController extends Controller
             'token' => $token,
         ], 201);
     }
-
-  
-    // public function login(Request $request)
-    // {
-    //     $credentials = $request->validate([
-    //         'email' => 'required|email',
-    //         'password' => 'required|string',
-    //     ]);
-
-    //     if (!Auth::attempt($credentials)) {
-    //         return response()->json(['message' => 'Invalid credentials'], 401);
-    //     }
-
-        
-    //     $user = Auth::guard('web')->user();
-
-
-    //     $user->tokens()->where('name', 'auth_token')->delete();
-
-    //     $token = $user->createToken('auth_token')->plainTextToken;
-        
-
-    //     return response()->json([
-    //         'message' => 'Login successful',
-    //         'user' => $user,
-    //         'token' => $token,
-    //     ]);
-    // }
-
    
-    public function profile(Request $request)
+    public function getUserById($id)
     {
+        $user = User::find($id); // find() returns null if not found
+    
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+    
         return response()->json([
-            'user' => $request->user()
-        ]);
+            'status' => true,
+            'user' => $user,
+        ], 200);
     }
+    
 
   
     public function logout(Request $request)
@@ -106,6 +231,25 @@ class AuthController extends Controller
             'user' => $user
         ]);
     }
+
+    public function destroy($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->delete();
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'User Deleted Successfully!',
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }   
+    }
+
     
 
 }
