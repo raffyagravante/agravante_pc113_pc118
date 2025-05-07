@@ -1,89 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-        }
-        .login-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-        input, button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+    .login-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+    input, button {
+      width: 100%;
+      padding: 5px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .alert {
+      color: red;
+      margin: 10px 0;
+      display: none;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="login-container">
-        <h2>Login</h2>
-        <form id="loginForm">
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <p id="message" style="color: red;"></p>
-    </div>
+<div class="login-container">
+  <h2 class="text-center mb-4">Login</h2>
+  <form id="loginForm">
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" placeholder="Enter email" required />
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" placeholder="Enter password" required />
 
-            let email = document.getElementById('email').value;
-            let password = document.getElementById('password').value;
-            
-            try {
-                let response = await fetch('http://127.0.0.1:8000/api/login', { // Change to your actual API URL
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: password
-                    })
-                });
+    <div id="message" class="alert">Invalid Credentials!</div>
 
-                let data = await response.json();
-                
-                if (response.ok) {
-                    alert('Login Successful!');
-                    localStorage.setItem('token', data.token); // Save token for authentication
-                    window.location.href = 'dashboard.html'; // Redirect to a dashboard
-                } else {
-                    document.getElementById('message').innerText = data.message || 'Login failed';
-                }
-            } catch (error) {
-                document.getElementById('message').innerText = 'Error connecting to server';
-            }
+    <button type="submit">Login</button>
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("loginForm");
+    const messageBox = document.getElementById("message");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      messageBox.style.display = "none";
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({ email, password }),
+          cache: "no-store"
         });
-    </script>
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert("Login Successful!");
+          localStorage.setItem("token", data.token);
+          window.location.href = "dashboard.html";
+        } else {
+          messageBox.textContent = data.message || "Login failed";
+          messageBox.style.display = "block";
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+        messageBox.textContent = "Error connecting to server.";
+        messageBox.style.display = "block";
+      }
+    });
+  });
+</script>
 
 </body>
 </html>
